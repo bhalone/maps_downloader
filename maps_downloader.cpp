@@ -32,12 +32,13 @@ bool downloadFile(const std::string& url, const std::string& filepath) {
 
 int main() {
     std::cout << "This .exe will download map files" << std::endl;
-    std::cout << "Press any key to start" << std::endl;
+    std::cout << "Press enter to start" << std::endl;
     std::cin.get();
 
     std::string path = "csgo/maps/";
     for (const auto & entry : fs::directory_iterator(path)) {
         if (entry.path().extension() == ".mapcfg") {
+            std::cout << "Parsing file: " << entry.path().filename() << std::endl;
             std::ifstream mapConfig(entry.path());
             std::string line;
             std::string url, savepath, filename;
@@ -55,6 +56,10 @@ int main() {
             if (!url.empty() && !savepath.empty() && !filename.empty()) {
                 // Убедитесь, что путь существует или создайте его
                 fs::create_directories(savepath);
+                // Вывод отладочной информации
+                std::cout << "URL: " << url << std::endl;
+                std::cout << "Save path: " << savepath << std::endl;
+                std::cout << "Filename: " << filename << std::endl;
 
                 // Скачивание файла
                 if (downloadFile(url, savepath + filename)) {
@@ -63,9 +68,10 @@ int main() {
                     std::cerr << "Failed to download: " << filename << std::endl;
                 }
             }
+            std::cout << "Done parsing file: " << entry.path().filename() << std::endl; << std::endl;
         }
     }
-    std::cout << "Press any key to exit" << std::endl;
+    std::cout << "Press enter to exit" << std::endl;
     std::cin.get();
     return 0;
 }

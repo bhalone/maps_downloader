@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up MSVC environment
+      uses: microsoft/setup-msbuild@v1
+
+    - name: Build and test
+      run: |
+        mkdir build
+        cd build
+        cmake -G "Visual Studio 16 2019" ..
+        msbuild /p:Configuration=Release /m
+        ctest

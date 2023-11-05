@@ -3,6 +3,7 @@
 #include <string>
 #include <filesystem>
 #include <curl/curl.h>
+#include <windows.h>
 
 namespace fs = std::filesystem;
 
@@ -31,14 +32,17 @@ bool downloadFile(const std::string& url, const std::string& filepath) {
 }
 
 int main() {
-    std::cout << "This .exe will download map files" << std::endl;
-    std::cout << "Press enter to start" << std::endl;
+    HWND hwnd = GetConsoleWindow();
+    std::wstring title = L"Maps Downloader";
+    SetWindowText(hwnd, title.c_str());
+    std::cout << "This .exe will download map files." << std::endl;
+    std::cout << "Press enter to start." << std::endl;
     std::cin.get();
 
     std::string path = "csgo/maps/";
     for (const auto & entry : fs::directory_iterator(path)) {
         if (entry.path().extension() == ".mapcfg") {
-            std::cout << "Parsing file: " << entry.path().filename() << std::endl;
+            std::cout << "Parsing mapcfg: " << entry.path().filename() << std::endl;
             std::ifstream mapConfig(entry.path());
             std::string line;
             std::string url, savepath, filename;
@@ -61,17 +65,26 @@ int main() {
                 std::cout << "Save path: " << savepath << std::endl;
                 std::cout << "Filename: " << filename << std::endl;
 
-                // Скачивание файла
-                if (downloadFile(url, savepath + filename)) {
-                    std::cout << "Downloaded: " << filename << std::endl;
-                } else {
-                    std::cerr << "Failed to download: " << filename << std::endl;
+                std::string fullFilePath = savepath + filename;
+                if (fs::exists(fullFilePath)) {
+                    std::cout << "Map " << filename << " is already downloaded" << std::endl;
+                    continue;
                 }
+                // Скачивание файла
+                if (!fs::exists(fullFilePath)) {
+                    if (downloadFile(url, fullFilePath)) {
+                        std::cout << "Downloaded: " << filename << std::endl;
+                    }
+                    else {
+                        std::cerr << "Failed to download: " << filename << std::endl;
+                    }
+                }
+
             }
-            std::cout << "Done parsing file: " << entry.path().filename() << std::endl; << std::endl;
+            std::cout << "Done parsing mapcfg: " << entry.path().filename() << std::endl << std::endl;
         }
     }
-    std::cout << "Press enter to exit" << std::endl;
+    std::cout << "Press enter to exit." << std::endl;
     std::cin.get();
     return 0;
 }

@@ -4,25 +4,31 @@
 #include <filesystem>
 #include <curl/curl.h>
 #include <windows.h>
+#include <iomanip>
+#include <cstdint>
 
 namespace fs = std::filesystem;
 
-// Функция для скачивания файла с помощью libcurl
+
 static size_t WriteData(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     size_t written = fwrite(ptr, size, nmemb, stream);
     return written;
 }
 
+
+
 bool downloadFile(const std::string& url, const std::string& filepath) {
-    CURL *curl;
-    FILE *fp;
+    CURL* curl;
+    FILE* fp;
     CURLcode res;
     curl = curl_easy_init();
     if (curl) {
-        fp = fopen(filepath.c_str(),"wb");
+        std::cout << "Starting download from: " << url << std::endl;
+        fp = fopen(filepath.c_str(), "wb");
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteData);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
+        curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
         res = curl_easy_perform(curl);
         curl_easy_cleanup(curl);
         fclose(fp);
@@ -58,19 +64,19 @@ int main() {
             }
 
             if (!url.empty() && !savepath.empty() && !filename.empty()) {
-                // Убедитесь, что путь существует или создайте его
+                // Creating savepath dir if it does not exists
                 fs::create_directories(savepath);
-                // Вывод отладочной информации
+                // Some debug info
                 std::cout << "URL: " << url << std::endl;
                 std::cout << "Save path: " << savepath << std::endl;
                 std::cout << "Filename: " << filename << std::endl;
 
                 std::string fullFilePath = savepath + filename;
                 if (fs::exists(fullFilePath)) {
-                    std::cout << "Map " << filename << " is already downloaded" << std::endl;
+                    std::cout << "Map " << filename << " is already downloaded" << std::endl << std::endl;
                     continue;
                 }
-                // Скачивание файла
+                // Downloading file
                 if (!fs::exists(fullFilePath)) {
                     if (downloadFile(url, fullFilePath)) {
                         std::cout << "Downloaded: " << filename << std::endl;

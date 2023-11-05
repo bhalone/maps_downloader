@@ -1,5 +1,5 @@
 name: Build with MSVC 2019
-
+on: workflow_dispatch
 on:
   push:
     branches:
